@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wheel of Fortune — Christmas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="snow" aria-hidden="true"></div>
+
+  <!-- ================= START SCREEN ================= -->
+  <section id="start-screen" class="screen active">
+    <div class="card start-card">
+      <h1 id="start-title">Wheel of Fortune</h1>
+      <p class="subtitle">🎄 Set up your teams and let the wheel decide! 🎅</p>
+
+      <label class="field">
+        <span>Number of teams</span>
+        <select id="team-count"></select>
+      </label>
+
+      <div id="team-inputs" class="team-inputs"></div>
+
+      <div class="phrase-field">
+        <label for="phrase-input">Phrase <small>(optional — leave empty to use config.js)</small></label>
+        <div class="phrase-row">
+          <input id="phrase-input" type="password" autocomplete="off" spellcheck="false" placeholder="Type a phrase to override config.js">
+          <label class="phrase-show"><input id="phrase-show" type="checkbox"> show</label>
+        </div>
+      </div>
+
+      <p class="config-info" id="config-info"></p>
+
+      <div class="start-buttons">
+        <button id="btn-start" class="btn btn-primary btn-big">Start game ▶</button>
+        <button id="btn-continue" class="btn btn-secondary hidden">Continue saved game</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GAME SCREEN ================= -->
+  <section id="game-screen" class="screen">
+    <header class="topbar">
+      <h1 id="game-title">Wheel of Fortune</h1>
+      <div class="topbar-buttons">
+        <button id="btn-reset-board" class="btn btn-small" title="Hide all letters and reset scores, keep teams">↺ Reset board</button>
+        <button id="btn-new-game" class="btn btn-small" title="Back to the start screen">⌂ New game</button>
+      </div>
+    </header>
+
+    <div id="category" class="category"></div>
+    <div id="board" class="board"></div>
+
+    <main class="game-main">
+      <div class="wheel-area">
+        <div class="wheel-wrap">
+          <div class="pointer"></div>
+          <canvas id="wheel" width="600" height="600"></canvas>
+          <button id="btn-spin" class="spin-center" title="Spin (space bar)">SPIN</button>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div id="message" class="message">Ask a question — a correct answer earns a spin!</div>
+
+        <h2>Teams <small>(click a team to make it active)</small></h2>
+        <ul id="teams" class="teams"></ul>
+
+        <div class="action-buttons">
+          <button id="btn-next-team" class="btn btn-secondary">Next team ⏭</button>
+          <button id="btn-vowel" class="btn btn-secondary">Buy vowel</button>
+          <button id="btn-guess" class="btn btn-primary">Guess the phrase 💬</button>
+        </div>
+
+        <h2>Recent awards <button id="btn-undo" class="btn btn-small" title="Revert the last award">↶ Undo last</button></h2>
+        <ul id="history" class="history"></ul>
+
+        <h2>Letters</h2>
+        <div id="letters" class="letters"></div>
+
+        <button id="btn-solve" class="btn btn-danger">Reveal solution</button>
+      </aside>
+    </main>
+  </section>
+
+  <!-- ================= VOWEL MODAL ================= -->
+  <div id="vowel-modal" class="modal hidden">
+    <div class="card modal-card">
+      <h2>Buy a vowel</h2>
+      <p id="vowel-prompt">Choose a vowel:</p>
+      <div id="vowel-buttons" class="vowel-buttons"></div>
+      <button id="btn-vowel-cancel" class="btn btn-small modal-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ================= GUESS MODAL ================= -->
+  <div id="guess-modal" class="modal hidden">
+    <div class="card modal-card">
+      <h2>Guess the phrase</h2>
+      <p id="guess-prompt">What is the phrase?</p>
+      <input id="guess-input" type="text" class="guess-input" autocomplete="off" spellcheck="false">
+      <p class="hint">Case, accents, punctuation and extra spaces are ignored.</p>
+      <div class="modal-buttons">
+        <button id="btn-guess-cancel" class="btn btn-small">Cancel</button>
+        <button id="btn-guess-ok" class="btn btn-primary">Check ✔</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confetti" aria-hidden="true"></div>
+
+  <script src="config.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
