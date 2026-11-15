@@ -216,3 +216,67 @@ select, input[type="text"] {
 #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 20; overflow: hidden; }
 .confetti-piece { position: absolute; top: -20px; width: 10px; height: 16px; animation: confetti linear forwards; }
 @keyframes confetti { to { transform: translateY(110vh) rotate(720deg); } }
+
+/* ---------- Navigation ---------- */
+.btn-nav { background: var(--gold); color: #3a1d00; border: 2px solid #fff; font-weight: 800; padding: .45rem 1rem; font-size: 1rem; }
+.questions-load { margin-top: .3rem; }
+.config-info.warn { color: #ffd479; }
+
+/* ---------- Question board ---------- */
+#questions-screen { padding-bottom: 1.5rem; }
+.qb-teams { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; margin: .9rem 1rem .3rem; }
+.qb-team {
+  display: flex; align-items: center; gap: .6rem; padding: .35rem .9rem; border-radius: 999px;
+  background: rgba(0,0,0,.3); border: 3px solid var(--team-color); font-size: 1.1rem;
+}
+.qb-team strong { color: var(--gold); font-size: 1.25rem; }
+.qb-message { text-align: center; min-height: 1.4em; margin: .3rem 1rem .6rem; font-size: 1.15rem; padding: .3rem; border-radius: 8px; }
+.qb-message.good { background: rgba(39, 174, 96, .45); }
+.qb-message.bad { background: rgba(192, 57, 43, .5); }
+.qboard {
+  display: grid; gap: .6rem; width: min(1200px, 96vw); margin: 0 auto; flex: 1;
+  grid-auto-rows: minmax(64px, 1fr);
+}
+.qb-header {
+  display: flex; align-items: center; justify-content: center; text-align: center; padding: .5rem;
+  background: var(--red-dark); border: 3px solid var(--gold); border-radius: 10px;
+  color: var(--gold); font-weight: 800; font-size: clamp(.9rem, 1.6vw, 1.35rem); text-transform: uppercase; letter-spacing: .05em;
+}
+.qb-tile {
+  font: inherit; font-weight: 900; font-size: clamp(1.2rem, 3vw, 2.4rem); color: var(--gold); cursor: pointer;
+  background: linear-gradient(#5a6068, #3b4046); border: 3px solid rgba(255,255,255,.5); border-radius: 10px;
+  text-shadow: 2px 2px 0 #000; transition: transform .15s, filter .15s;
+}
+.qb-tile:hover:not(:disabled) { transform: scale(1.04); filter: brightness(1.2); }
+.qb-tile.played { background: rgba(255,255,255,.08); color: rgba(255,255,255,.45); font-size: clamp(.8rem, 1.4vw, 1.1rem); text-shadow: none; border-style: dashed; }
+.qb-tile.won {
+  border: 4px solid var(--team-color); color: #fff; text-shadow: 1px 1px 2px #000;
+  background: var(--team-color); /* fallback for browsers without color-mix */
+  background: color-mix(in srgb, var(--team-color) 60%, transparent);
+}
+.qb-tile.empty { visibility: hidden; }
+.qb-empty { grid-column: 1 / -1; text-align: center; font-size: 1.2rem; padding: 2rem; line-height: 2.5; }
+
+/* ---------- Question modal ---------- */
+.question-card { width: min(900px, 94vw); max-width: none; }
+.q-meta { color: var(--gold); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 1.1rem; }
+.q-text { font-size: clamp(1.4rem, 3vw, 2.3rem); font-weight: 700; margin: 1rem 0 1.2rem; line-height: 1.3; }
+.q-answer { font-size: clamp(1.2rem, 2.5vw, 1.9rem); background: var(--cream); color: #111; border-radius: 10px; padding: .6rem 1rem; font-weight: 800; animation: pop .3s ease; }
+.q-teams { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; margin: .4rem 0 1rem; }
+.q-team-btn { background: rgba(0,0,0,.35); border: 3px solid var(--team-color); font-weight: 700; }
+.q-team-btn:hover { background: var(--team-color); }
+.q-buttons { justify-content: space-between; }
+
+/* ---------- Music questions ---------- */
+.q-music { display: flex; flex-direction: column; align-items: center; gap: .5rem; margin: 0 0 1rem; }
+.q-music-note { font-size: 3rem; line-height: 1; }
+.q-music.playing .q-music-note { animation: bounce-note .6s ease-in-out infinite alternate; }
+.q-music-buttons { display: flex; gap: .6rem; justify-content: center; align-items: center; }
+@keyframes bounce-note { from { transform: translateY(0) rotate(-8deg); } to { transform: translateY(-8px) rotate(8deg); } }
+/* The players stay in the page (so browsers keep them running) but are invisible and not clickable. */
+.music-host { position: fixed; left: 0; bottom: 0; width: 300px; height: 152px; opacity: 0; pointer-events: none; z-index: -1; overflow: hidden; }
+/* ---------- Question pictures ---------- */
+.q-image { display: block; max-width: 100%; max-height: 45vh; margin: 0 auto 1rem; border-radius: 10px; border: 3px solid var(--cream); object-fit: contain; cursor: zoom-in; background: rgba(255,255,255,.08); }
+.image-zoom { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.92); cursor: zoom-out; }
+.image-zoom img { max-width: 96vw; max-height: 96vh; object-fit: contain; border-radius: 8px; }.hint.warn { color: #ffd479; opacity: 1; }
+.question-card { max-height: 96vh; overflow-y: auto; }

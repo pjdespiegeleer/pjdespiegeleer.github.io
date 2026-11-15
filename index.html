@@ -31,6 +31,11 @@
       </div>
 
       <p class="config-info" id="config-info"></p>
+      <p class="config-info" id="questions-info"></p>
+      <div class="questions-load">
+        <button id="btn-load-questions" type="button" class="btn btn-small">📂 Load questions.yaml…</button>
+        <input id="questions-file" type="file" accept=".yaml,.yml,text/yaml" class="hidden">
+      </div>
 
       <div class="start-buttons">
         <button id="btn-start" class="btn btn-primary btn-big">Start game ▶</button>
@@ -44,6 +49,7 @@
     <header class="topbar">
       <h1 id="game-title">Wheel of Fortune</h1>
       <div class="topbar-buttons">
+        <button id="btn-to-questions" class="btn btn-nav" title="Go to the question board (Q)">❓ Question board</button>
         <button id="btn-reset-board" class="btn btn-small" title="Hide all letters and reset scores, keep teams">↺ Reset board</button>
         <button id="btn-new-game" class="btn btn-small" title="Back to the start screen">⌂ New game</button>
       </div>
@@ -84,6 +90,52 @@
     </main>
   </section>
 
+  <!-- ================= QUESTION BOARD SCREEN ================= -->
+  <section id="questions-screen" class="screen">
+    <header class="topbar">
+      <h1 id="questions-title">Question board</h1>
+      <div class="topbar-buttons">
+        <button id="btn-to-wheel" class="btn btn-nav" title="Go to the wheel (W)">🎡 Wheel</button>
+      </div>
+    </header>
+    <div id="qb-teams" class="qb-teams"></div>
+    <div id="qb-message" class="qb-message"></div>
+    <div id="qboard" class="qboard"></div>
+  </section>
+
+  <!-- ================= QUESTION MODAL ================= -->
+  <div id="question-modal" class="modal hidden">
+    <div class="card modal-card question-card">
+      <div id="q-meta" class="q-meta"></div>
+      <p id="q-text" class="q-text"></p>
+      <img id="q-image" class="q-image hidden" alt="Question picture">
+      <p id="q-image-error" class="hint warn hidden"></p>
+      <div id="q-music" class="q-music hidden">
+        <div class="q-music-note">🎵</div>
+        <div class="q-music-buttons">
+          <button id="btn-music-play" class="btn" title="Play / pause the song (P)">▶ Play</button>
+          <button id="btn-music-restart" class="btn btn-small" title="Start the song again">⏮ Restart</button>
+        </div>
+        <div id="q-music-status" class="hint"></div>
+      </div>
+      <p id="q-answer" class="q-answer hidden"></p>
+      <button id="btn-show-answer" class="btn btn-secondary">Show answer 👀</button>
+      <p class="hint">Who answered correctly? The money is awarded automatically.</p>
+      <div id="q-teams" class="q-teams"></div>
+      <div class="modal-buttons q-buttons">
+        <button id="btn-q-close" class="btn btn-small" title="Close without using the question (Esc)">Close</button>
+        <button id="btn-q-nobody" class="btn btn-danger" title="Nobody answered correctly — mark the question as played">✖ Nobody</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enlarged question picture (click the picture in a question) -->
+  <div id="image-zoom" class="image-zoom hidden" title="Click to close"><img id="image-zoom-img" alt=""></div>
+
+  <!-- Hidden music players: the song title/artist are never shown on screen -->
+  <div id="music-host" class="music-host" aria-hidden="true"><div id="spotify-embed"></div></div>
+  <audio id="music-audio" preload="auto"></audio>
+
   <!-- ================= VOWEL MODAL ================= -->
   <div id="vowel-modal" class="modal hidden">
     <div class="card modal-card">
@@ -111,6 +163,7 @@
   <div id="confetti" aria-hidden="true"></div>
 
   <script src="config.js"></script>
+  <script src="lib/js-yaml.min.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

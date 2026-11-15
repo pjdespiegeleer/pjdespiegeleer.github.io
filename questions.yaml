@@ -1,0 +1,99 @@
+# =============================================================
+#  QUESTION BOARD — edit the questions here
+# =============================================================
+#  5 categories, each with exactly 6 questions.
+#  The prize money is set by position (top to bottom):
+#    1-2: € 100   3-4: € 200   5-6: € 300
+#  Put "quotes" around text that contains a colon (:) or starts with a special character.
+#
+#  Music questions: add  spotify: <song link>  or  audio: music/song.mp3
+#  (a local file next to index.html), and optionally  start: <seconds>.
+#  The player is hidden, so the song title/artist are never shown.
+#
+#  Picture questions: add  image: images/my-picture.jpg  (path relative to
+#  index.html; put the file in the "images" folder). Click the picture to enlarge.
+# =============================================================
+
+categories:
+  - name: Christmas movies
+    questions:
+      - question: In "Home Alone", which city does the McCallister family fly to?
+        answer: Paris
+      - question: What is the name of the Grinch's dog?
+        answer: Max
+      - question: In "Elf", which actor plays Buddy?
+        answer: Will Ferrell
+      - question: Which Christmas movie features the line "Keep the change, ya filthy animal"?
+        answer: Home Alone
+      - question: In "Die Hard", what is the name of the skyscraper?
+        answer: Nakatomi Plaza
+      - question: In which year was the first "Home Alone" movie released?
+        answer: "1990"
+
+  - name: Christmas songs
+    questions:
+      # Music question: add a "spotify" link (Spotify → Share → Copy Song Link).
+      # The song plays through a hidden player, so the title/artist stay secret.
+      # Optional "start" = second to start playing from.
+      - question: 🎵 Name this song and the artist!
+        spotify: https://open.spotify.com/track/0bYg9bo50gSsH3LtXe2SQn
+        answer: All I Want for Christmas Is You — Mariah Carey
+      - question: 🎵 Name this song and the band!
+        spotify: https://open.spotify.com/track/4Ro9JuYHKVG6tD8XSCsZzS
+        start: 5
+        answer: Last Christmas — Wham!
+      - question: Complete the lyric - "Rudolph the red-nosed reindeer had a very shiny ..."
+        answer: Nose
+      - question: Which singer had a hit with "White Christmas" in 1942?
+        answer: Bing Crosby
+      - question: How many gifts in total are given in "The Twelve Days of Christmas"?
+        answer: "364"
+      - question: In which language was "Silent Night" originally written?
+        answer: German (Stille Nacht)
+
+  - name: Traditions
+    questions:
+      - question: Which country gives London the Trafalgar Square Christmas tree every year?
+        answer: Norway
+      # Picture question: "image" = path to a file in this folder (e.g. images/...).
+      - question: What is this plant, which you traditionally kiss under at Christmas?
+        image: images/example-mistletoe.svg
+        answer: Mistletoe
+      - question: On which date do Belgian children celebrate Sinterklaas?
+        answer: 6 December
+      - question: In which country did the tradition of the Christmas tree originate?
+        answer: Germany
+      - question: What is the name of the Italian Christmas witch who brings gifts on 6 January?
+        answer: La Befana
+      - question: In which country is it a tradition to eat KFC on Christmas?
+        answer: Japan
+
+  - name: Santa & friends
+    questions:
+      - question: How many reindeer pull Santa's sleigh (including Rudolph)?
+        answer: "9"
+      - question: Where does Santa Claus live?
+        answer: The North Pole
+      - question: Name Santa's reindeer whose name means "lightning" in Dutch/German.
+        answer: Blitzen (Donder and Blitzen)
+      - question: Which drinks company made Santa's red-and-white image famous in its ads?
+        answer: Coca-Cola
+      - question: What is Santa Claus called in France?
+        answer: Père Noël
+      - question: Of which city was Saint Nicholas the bishop?
+        answer: Myra (in present-day Turkey)
+
+  - name: Winter trivia
+    questions:
+      - question: How many sides does a snowflake have?
+        answer: "6"
+      - question: What is frozen water called?
+        answer: Ice
+      - question: On which date is the winter solstice in the Northern Hemisphere (usually)?
+        answer: 21 December
+      - question: Which animal is the largest land carnivore and lives in the Arctic?
+        answer: The polar bear
+      - question: In which country were the 2022 Winter Olympics held?
+        answer: China (Beijing)
+      - question: At what temperature are Celsius and Fahrenheit equal?
+        answer: "-40 degrees"
