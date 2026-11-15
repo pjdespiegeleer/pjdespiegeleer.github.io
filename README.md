@@ -75,11 +75,13 @@ and artist are never shown on screen:
       - question: 🎵 Name this song and the artist!
         spotify: https://open.spotify.com/track/0bYg9bo50gSsH3LtXe2SQn   # Spotify → Share → Copy Song Link
         start: 30          # optional: start at second 30
+        end: 45            # optional: stop at second 45
         answer: All I Want for Christmas Is You — Mariah Carey
 ```
 
 The question shows **▶ Play / ⏸ Pause** and **⏮ Restart** (keyboard: `P`).
-The music stops when the question is closed or answered.
+The music stops when the question is closed or answered, or at `end`
+(press Play to hear the fragment again from `start`).
 
 - **Spotify** needs internet. Log in to Spotify (open.spotify.com) in the same
   browser before the quiz, otherwise Spotify only plays a 30-second preview.
