@@ -23,7 +23,7 @@ window.GAME_CONFIG = {
   // Money (in euro).
   awards: [100, 200, 300],   // buttons to reward a correct answer
   spinCost: 200,             // price of one spin of the wheel
-  vowelCost: 700,            // price of buying one vowel
+  vowelCost: 1000,            // price of buying one vowel
   letterReward: 100,         // earned per occurrence of a revealed letter
 
   // How long the wheel spins, in seconds.

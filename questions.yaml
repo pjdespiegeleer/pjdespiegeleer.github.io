@@ -7,7 +7,8 @@
 #  Put "quotes" around text that contains a colon (:) or starts with a special character.
 #
 #  Music questions: add  spotify: <song link>  or  audio: music/song.mp3
-#  (a local file next to index.html), and optionally  start: <seconds>.
+#  (a local file next to index.html), and optionally  start: <seconds>  and
+#  end: <seconds>  to play only a fragment.
 #  The player is hidden, so the song title/artist are never shown.
 #
 #  Picture questions: add  image: images/my-picture.jpg  (path relative to
@@ -15,58 +16,64 @@
 # =============================================================
 
 categories:
-  - name: Christmas movies
+  - name: Ketnet
     questions:
-      - question: In "Home Alone", which city does the McCallister family fly to?
-        answer: Paris
-      - question: What is the name of the Grinch's dog?
-        answer: Max
-      - question: In "Elf", which actor plays Buddy?
-        answer: Will Ferrell
-      - question: Which Christmas movie features the line "Keep the change, ya filthy animal"?
-        answer: Home Alone
-      - question: In "Die Hard", what is the name of the skyscraper?
-        answer: Nakatomi Plaza
-      - question: In which year was the first "Home Alone" movie released?
-        answer: "1990"
+      - question: Hoe heet de bekende dans- en zangacademie die centraal staat in de populaire jeugdserie Spring, die in 2002 van start ging op Ketnet?
+        answer: Spring
+      - question: Hoe heette het programma waarin Staf Coppens allerlei spannende verhalen presenteerde?
+        answer: Stafkes straffe kost
+      - question: Welk programma werd gepresenteerd door deze enge meneer?
+        answer: Hart, Ster en Driehoek
+        image: images/griezelverhalen.jpg
+      - question: In welke Vlaamse stad woonde de dolblije vriendengroep uit de cult-sitcom W817?
+        answer: Antwerpen
+      - question: In welk jaar werd het dagelijkse Ketnet-jeugdjournaal Karrewiet voor het eerst uitgezonden?
+        answer: "2002"
+      - question: Welke 3 vormen konden er uit de ketnetkroket komen?
+        answer: Hart, Ster en Driehoek
 
-  - name: Christmas songs
+  - name: Muziek
     questions:
       # Music question: add a "spotify" link (Spotify → Share → Copy Song Link).
       # The song plays through a hidden player, so the title/artist stay secret.
-      # Optional "start" = second to start playing from.
-      - question: 🎵 Name this song and the artist!
+      # Optional "start" / "end" = seconds to start / stop playing.
+      - question: 🎵 Naam van Artiest en liedje!
+        spotify: https://open.spotify.com/track/4Rin9yz8fuTDI0fLGqngFT
+        answer: Choosin' Texas - Ella Langley
+        start: 0
+        end: 25
+      - question: 🎵 Enkel de artiest is genoeg!
+        spotify: https://open.spotify.com/track/7eYzn1CuiJK6VvUhf8zA6k
+        start: 0
+        end: 15
+        answer: RAYE
+      - question: Iedereen kent natuurlijk deze hit van Mariah Carey. Maar in welk jaar is deze uitgebracht?
         spotify: https://open.spotify.com/track/0bYg9bo50gSsH3LtXe2SQn
-        answer: All I Want for Christmas Is You — Mariah Carey
-      - question: 🎵 Name this song and the band!
-        spotify: https://open.spotify.com/track/4Ro9JuYHKVG6tD8XSCsZzS
-        start: 5
-        answer: Last Christmas — Wham!
-      - question: Complete the lyric - "Rudolph the red-nosed reindeer had a very shiny ..."
-        answer: Nose
-      - question: Which singer had a hit with "White Christmas" in 1942?
-        answer: Bing Crosby
-      - question: How many gifts in total are given in "The Twelve Days of Christmas"?
-        answer: "364"
-      - question: In which language was "Silent Night" originally written?
-        answer: German (Stille Nacht)
+        answer: "1994"
+      - question: In 2024 kwam de film 'A complete unknown' uit, de biopic van Bob Dylan. Hoeveel albums heeft Bob Dylan tot nu toe uitgebracht? Je mag er 5 naastzitten.
+        answer: "40"
+      - question: Het aantal covers van 'Baby it's Cold Outside' is niet meer bij te houden. Maar welke artiesten branchten deze speciale versie uit in 2011?
+        spotify: https://open.spotify.com/track/6pUybQajuSyPtb4AD1lX6s
+        answer: "Astrid & John Bryan"
+        image: images/pussywagon.jpg
+      - question: Dit jaar was natuurlijk ook het jaar van onze trouw. Op welk liedje liep Jasmien naar het altaar?
+        answer: Here comes the sun - The Beatles
 
-  - name: Traditions
+  - name: Dit jaar op TV
     questions:
-      - question: Which country gives London the Trafalgar Square Christmas tree every year?
-        answer: Norway
-      # Picture question: "image" = path to a file in this folder (e.g. images/...).
-      - question: What is this plant, which you traditionally kiss under at Christmas?
-        image: images/example-mistletoe.svg
-        answer: Mistletoe
-      - question: On which date do Belgian children celebrate Sinterklaas?
-        answer: 6 December
-      - question: In which country did the tradition of the Christmas tree originate?
-        answer: Germany
-      - question: What is the name of the Italian Christmas witch who brings gifts on 6 January?
-        answer: La Befana
-      - question: In which country is it a tradition to eat KFC on Christmas?
-        answer: Japan
+      - question: In welk Zuid-Europees land speelde het veertiende seizoen van De Mol (voorjaar 2026) zich af?
+        answer: Portugal
+      - question: "Welke komiek nam in augustus 2026 het presentatiestokje over van Philippe Geubels om op Play haar eigen humoristische reeks over typisch Belgische gewoontes te presenteren? Tip: Zoek het niet te ver"
+        answer: Jade Mintjens
+      - question: Welke zelfverklaarde womenizer presenteerde afgelopen jaar podcasts en talkshows op alle grote zenders (vrt, vtm en play)?
+        answer: Ruben Van Gucht
+      - question: In kamp Fly nemen Tom Waes en Fly enkele schoolverlaters mee op een avontuurlijke opleiding? Waar vindt dit plaats?
+        answer: Corsica
+      - question: Sinds 1994 presenteert Ben Crabbé de quiz Blokken. Volgend jaar neemt hij afscheid. Wie wordt zijn opvolger?
+        answer: Sven De Leijer
+      - question: "Deze zomer waren we allemaal getuige van enkele mooie romances op VTM, via het programma B&B zoekt lief. Na de opnames onstond er echter een verrassend koppel: Steven & Aurélie. In welke stad woont Steven?"
+        answer: Malaga
+        image: images/steven.jpg
 
   - name: Santa & friends
     questions:

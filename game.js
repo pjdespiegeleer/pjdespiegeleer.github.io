@@ -162,6 +162,7 @@
           audio: q && q.audio ? String(q.audio).trim() : "",
           image: q && q.image ? String(q.image).trim() : "",
           start: Math.max(0, Number(q && q.start) || 0),
+          end: Math.max(0, Number(q && q.end) || 0),
           value: QVALUES[qi]
         }))
       }))
@@ -422,6 +423,7 @@
         c.addListener("playback_update", (e) => {
           if (!e || !e.data) return;
           music.playing = !e.data.isPaused;
+          if (music.playing && music.kind === "spotify" && Date.now() - music.playAt > 1500 && pastEnd(e.data.position / 1000)) { reachedEnd(); return; }
           updateMusicUi();
         });
         c.addListener("ready", () => { const f = music.onReady; music.onReady = null; if (f) f(); });
@@ -432,6 +434,21 @@
   }
 
   function musicStatus(text) { el.qMusicStatus.textContent = text; }
+
+  // "end" (seconds) is only used when it is after "start".
+  function pastEnd(seconds) {
+    const q = music.q;
+    return !!q && q.end > q.start && seconds >= q.end;
+  }
+
+  // Stop at the end timestamp; the next Play starts again from "start".
+  function reachedEnd() {
+    if (music.kind === "audio") el.musicAudio.pause();
+    else if (music.spotify) music.spotify.pause();
+    music.playing = false; music.started = false;
+    updateMusicUi();
+    musicStatus("⏹ End of fragment — press Play to hear it again.");
+  }
 
   function updateMusicUi() {
     el.btnMusicPlay.textContent = music.playing ? "⏸ Pause" : "▶ Play";
@@ -458,6 +475,7 @@
   async function playMusicFromStart() {
     const q = music.q;
     music.started = true;
+    music.playAt = Date.now(); // Spotify may briefly report the old position after a restart
     if (music.kind === "audio") {
       try {
         el.musicAudio.currentTime = q.start;
@@ -1037,6 +1055,9 @@
   el.btnMusicRestart.addEventListener("click", restartMusic);
   el.musicAudio.addEventListener("play", () => { music.playing = true; updateMusicUi(); });
   el.musicAudio.addEventListener("pause", () => { music.playing = false; updateMusicUi(); });
+  el.musicAudio.addEventListener("timeupdate", () => {
+    if (music.kind === "audio" && music.playing && pastEnd(el.musicAudio.currentTime)) reachedEnd();
+  });
   el.musicAudio.addEventListener("error", () => { if (music.kind === "audio") musicStatus("⚠ Could not play the audio file — check the path in questions.yaml."); });
   el.btnQNobody.addEventListener("click", () => answerQuestion(-1));
   window.addEventListener("resize", () => { if (state) sizeBoard(); });
