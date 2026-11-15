@@ -12,13 +12,17 @@
     spinCost: 200,
     vowelCost: 700,
     letterReward: 100,
-    spinSeconds: 5
+    spinSeconds: 5,
+    questionsFile: "questions.yaml",
+    questionValues: [100, 100, 200, 200, 300, 300],
+    maxCategories: 5
   }, window.GAME_CONFIG || {});
 
   const VOWELS = ["A", "E", "I", "O", "U"];
   const CONSONANTS = "BCDFGHJKLMNPQRSTVWXYZ".split("");
   const STORAGE_KEY = "wof-christmas-state";
   const STATE_VERSION = 2;
+  const QUESTIONS_CACHE_KEY = "wof-christmas-questions";
   const TEAM_COLORS = ["#e74c3c", "#3498db", "#f1c40f", "#9b59b6", "#1abc9c", "#e67e22", "#ecf0f1", "#ff69b4"];
   const SEGMENT_COLORS = ["#c0392b", "#1e8449", "#d4ac0d", "#1f618d", "#a93226", "#117a65", "#b9770e", "#6c3483"];
   const SPIN_COST = Number(CFG.spinCost) || 0;
@@ -60,6 +64,15 @@
     vowelModal: $("vowel-modal"), vowelButtons: $("vowel-buttons"), vowelPrompt: $("vowel-prompt"), btnVowelCancel: $("btn-vowel-cancel"),
     guessModal: $("guess-modal"), guessPrompt: $("guess-prompt"), guessInput: $("guess-input"),
     btnGuessOk: $("btn-guess-ok"), btnGuessCancel: $("btn-guess-cancel"),
+    questionsInfo: $("questions-info"), btnLoadQuestions: $("btn-load-questions"), questionsFile: $("questions-file"),
+    btnToQuestions: $("btn-to-questions"), btnToWheel: $("btn-to-wheel"),
+    questionsScreen: $("questions-screen"), questionsTitle: $("questions-title"),
+    qbTeams: $("qb-teams"), qbMessage: $("qb-message"), qboard: $("qboard"),
+    questionModal: $("question-modal"), qMeta: $("q-meta"), qText: $("q-text"), qAnswer: $("q-answer"),
+    qImage: $("q-image"), qImageError: $("q-image-error"), imageZoom: $("image-zoom"), imageZoomImg: $("image-zoom-img"),
+    qMusic: $("q-music"), btnMusicPlay: $("btn-music-play"), btnMusicRestart: $("btn-music-restart"),
+    qMusicStatus: $("q-music-status"), musicAudio: $("music-audio"), spotifyEmbed: $("spotify-embed"),
+    btnShowAnswer: $("btn-show-answer"), qTeams: $("q-teams"), btnQClose: $("btn-q-close"), btnQNobody: $("btn-q-nobody"),
     snow: $("snow"), confetti: $("confetti")
   };
 
@@ -73,7 +86,8 @@
   const load = () => {
     try {
       const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      return s && s.v === STATE_VERSION && typeof s.sentence === "string" && s.sentence && Array.isArray(s.teams) ? s : null;
+      return s && s.v === STATE_VERSION && typeof s.sentence === "string" && s.sentence && Array.isArray(s.teams)
+        ? Object.assign({ qdata: null, qboard: {} }, s) : null;
     } catch (e) { return null; }
   };
   const clearSaved = () => { try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ } };
@@ -81,7 +95,8 @@
   const wheelLetters = () => CONSONANTS.filter((c) => !state.used.includes(c));
   const vowelsLeft = () => VOWELS.filter((v) => !state.used.includes(v));
   const activeTeam = () => state.teams[state.active];
-  const modalOpen = () => !el.vowelModal.classList.contains("hidden") || !el.guessModal.classList.contains("hidden");
+  const modalOpen = () => !el.vowelModal.classList.contains("hidden") || !el.guessModal.classList.contains("hidden") ||
+    !el.questionModal.classList.contains("hidden");
 
   // ---------- Sound (tiny WebAudio beeps, no files needed) ----------
   let audioCtx = null;
@@ -121,6 +136,96 @@
     el.phraseShow.addEventListener("change", () => { el.phraseInput.type = el.phraseShow.checked ? "text" : "password"; });
     updatePhraseInfo();
     el.btnContinue.classList.toggle("hidden", !load());
+    el.btnLoadQuestions.addEventListener("click", () => el.questionsFile.click());
+    el.questionsFile.addEventListener("change", loadQuestionsFromFile);
+    loadQuestionsAuto();
+  }
+
+  // ---------- Questions (YAML) ----------
+  // { categories: [{ name, questions: [{ question, answer, value }] }] }
+  let QDATA = null;
+  let QSOURCE = "";
+  const QVALUES = (CFG.questionValues || []).map(Number);
+
+  function parseQuestions(text) {
+    if (!window.jsyaml) throw new Error("YAML library (lib/js-yaml.min.js) is missing");
+    const doc = window.jsyaml.load(text);
+    const cats = doc && Array.isArray(doc.categories) ? doc.categories : null;
+    if (!cats || cats.length === 0) throw new Error('no "categories" list found');
+    return {
+      categories: cats.slice(0, CFG.maxCategories).map((c, ci) => ({
+        name: String((c && c.name) ?? `Category ${ci + 1}`),
+        questions: (Array.isArray(c && c.questions) ? c.questions : []).slice(0, QVALUES.length).map((q, qi) => ({
+          question: String((q && q.question) ?? ""),
+          answer: String((q && q.answer) ?? ""),
+          spotify: q && q.spotify ? String(q.spotify).trim() : "",
+          audio: q && q.audio ? String(q.audio).trim() : "",
+          image: q && q.image ? String(q.image).trim() : "",
+          start: Math.max(0, Number(q && q.start) || 0),
+          value: QVALUES[qi]
+        }))
+      }))
+    };
+  }
+
+  function setQuestions(text, source) {
+    QDATA = parseQuestions(text);
+    QSOURCE = source;
+    try { localStorage.setItem(QUESTIONS_CACHE_KEY, text); } catch (e) { /* ignore */ }
+    updateQuestionsInfo();
+  }
+
+  async function loadQuestionsAuto() {
+    let text = null;
+    try {
+      const res = await fetch(CFG.questionsFile + "?t=" + Date.now(), { cache: "no-store" });
+      if (res.ok) text = await res.text();
+    } catch (e) {
+      // Opened as a local file (file://): browsers block fetch. Fall back to the last loaded copy.
+    }
+    if (text !== null) {
+      try { setQuestions(text, CFG.questionsFile); } catch (e) { showQuestionsError(e); }
+      return;
+    }
+    let cached = null;
+    try { cached = localStorage.getItem(QUESTIONS_CACHE_KEY); } catch (e) { /* ignore */ }
+    if (cached) {
+      try { setQuestions(cached, "saved copy — reload the file if you changed it"); return; } catch (e) { /* ignore */ }
+    }
+    updateQuestionsInfo();
+  }
+
+  function loadQuestionsFromFile() {
+    const file = el.questionsFile.files[0];
+    el.questionsFile.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        setQuestions(String(reader.result), file.name);
+        if (state && el.questionsScreen.classList.contains("active")) {
+          state.qdata = QDATA; state.qboard = {}; save(); renderQuestionBoard();
+        }
+      } catch (e) { showQuestionsError(e); }
+    };
+    reader.readAsText(file);
+  }
+
+  function showQuestionsError(e) {
+    el.questionsInfo.textContent = "⚠ Error in questions file: " + (e && e.message ? e.message : e);
+    el.questionsInfo.classList.add("warn");
+    alert("Could not read the questions file:\n\n" + (e && e.message ? e.message : e));
+  }
+
+  function updateQuestionsInfo() {
+    el.questionsInfo.classList.toggle("warn", !QDATA);
+    if (QDATA) {
+      const n = QDATA.categories.reduce((s, c) => s + c.questions.length, 0);
+      el.questionsInfo.textContent = `Question board: ${QDATA.categories.length} categories, ${n} questions (from ${QSOURCE}).`;
+    } else {
+      el.questionsInfo.textContent = `⚠ ${CFG.questionsFile} could not be loaded automatically (the browser blocks this ` +
+        "when the game is opened as a local file). Click the button below to load it.";
+    }
   }
 
   const chosenPhrase = () => cleanPhrase(el.phraseInput.value) || CONFIG_SENTENCE;
@@ -161,7 +266,8 @@
     state = {
       v: STATE_VERSION, sentence: SENTENCE,
       teams: names.map((name) => ({ name, money: 0 })),
-      active: 0, used: [], letterTeams: {}, solved: false, winner: null, log: []
+      active: 0, used: [], letterTeams: {}, solved: false, winner: null, log: [],
+      qdata: QDATA, qboard: {}
     };
     save();
     showGame();
@@ -172,6 +278,7 @@
   // ============================================================
   function showGame() {
     el.startScreen.classList.remove("active");
+    el.questionsScreen.classList.remove("active");
     el.gameScreen.classList.add("active");
     el.category.textContent = CFG.category || "";
     rotation = 0;
@@ -185,8 +292,279 @@
 
   function showStart() {
     el.gameScreen.classList.remove("active");
+    el.questionsScreen.classList.remove("active");
     el.startScreen.classList.add("active");
     el.btnContinue.classList.toggle("hidden", !load());
+  }
+
+  // ---------- Navigation between wheel and question board ----------
+  function goToQuestions() {
+    if (!state || spinning || modalOpen()) return;
+    el.gameScreen.classList.remove("active");
+    el.questionsScreen.classList.add("active");
+    el.qbMessage.textContent = "Pick a category and an amount!";
+    el.qbMessage.className = "qb-message";
+    renderQuestionBoard();
+  }
+
+  function goToWheel() {
+    if (!state || modalOpen()) return;
+    el.questionsScreen.classList.remove("active");
+    el.gameScreen.classList.add("active");
+    sizeBoard();
+    renderAll();
+  }
+
+  // ============================================================
+  //  QUESTION BOARD
+  // ============================================================
+  const qKey = (c, r) => `${c}-${r}`;
+
+  function renderQuestionBoard() {
+    el.questionsTitle.textContent = "❓ Question board";
+    renderQbTeams();
+    el.qboard.innerHTML = "";
+    const data = state.qdata;
+    if (!data || !data.categories.length) {
+      const p = document.createElement("div");
+      p.className = "qb-empty";
+      p.textContent = `No questions loaded. Load ${CFG.questionsFile} to fill the board.`;
+      const b = document.createElement("button");
+      b.className = "btn btn-primary";
+      b.textContent = "📂 Load questions.yaml…";
+      b.addEventListener("click", () => el.questionsFile.click());
+      p.append(document.createElement("br"), b);
+      el.qboard.append(p);
+      return;
+    }
+    el.qboard.style.gridTemplateColumns = `repeat(${data.categories.length}, minmax(0, 1fr))`;
+    data.categories.forEach((cat) => {
+      const h = document.createElement("div");
+      h.className = "qb-header";
+      h.textContent = cat.name;
+      el.qboard.append(h);
+    });
+    for (let r = 0; r < QVALUES.length; r++) {
+      data.categories.forEach((cat, c) => {
+        const q = cat.questions[r];
+        const tile = document.createElement("button");
+        tile.className = "qb-tile";
+        if (!q || !q.question) {
+          tile.classList.add("empty");
+          tile.disabled = true;
+          el.qboard.append(tile);
+          return;
+        }
+        const result = state.qboard[qKey(c, r)];
+        if (result === undefined) {
+          tile.textContent = money(q.value);
+        } else {
+          tile.classList.add("played");
+          if (result >= 0 && state.teams[result]) {
+            tile.style.setProperty("--team-color", TEAM_COLORS[result % TEAM_COLORS.length]);
+            tile.classList.add("won");
+            tile.textContent = state.teams[result].name;
+          } else {
+            tile.textContent = "✖";
+          }
+        }
+        tile.title = `${cat.name} — ${money(q.value)}`;
+        tile.addEventListener("click", () => openQuestion(c, r));
+        el.qboard.append(tile);
+      });
+    }
+  }
+
+  function renderQbTeams() {
+    el.qbTeams.innerHTML = "";
+    state.teams.forEach((t, i) => {
+      const d = document.createElement("div");
+      d.className = "qb-team";
+      d.style.setProperty("--team-color", TEAM_COLORS[i % TEAM_COLORS.length]);
+      const name = document.createElement("span");
+      name.textContent = t.name;
+      const m = document.createElement("strong");
+      m.textContent = money(t.money);
+      d.append(name, m);
+      el.qbTeams.append(d);
+    });
+  }
+
+  // ---------- Music questions (hidden players: title/artist never shown) ----------
+  const music = { kind: "", q: null, playing: false, started: false, api: null, apiPromise: null, spotify: null, onReady: null };
+
+  function spotifyUri(s) {
+    if (/^spotify:(track|episode):[A-Za-z0-9]+$/.test(s)) return s;
+    const m = s.match(/open\.spotify\.com\/(?:intl-[a-z-]+\/)?(?:embed\/)?(track|episode)\/([A-Za-z0-9]+)/i);
+    return m ? `spotify:${m[1].toLowerCase()}:${m[2]}` : "";
+  }
+
+  function loadSpotifyApi() {
+    if (music.api) return Promise.resolve(music.api);
+    if (!music.apiPromise) {
+      music.apiPromise = new Promise((resolve, reject) => {
+        window.onSpotifyIframeApiReady = (api) => { music.api = api; resolve(api); };
+        const s = document.createElement("script");
+        s.src = "https://open.spotify.com/embed/iframe-api/v1";
+        s.async = true;
+        s.onerror = () => { music.apiPromise = null; s.remove(); reject(new Error("Could not load Spotify (no internet?)")); };
+        document.head.append(s);
+      });
+    }
+    return music.apiPromise;
+  }
+
+  async function spotifyController(uri) {
+    const api = await loadSpotifyApi();
+    if (music.spotify) return music.spotify;
+    return new Promise((resolve) => {
+      api.createController(el.spotifyEmbed, { uri, width: 300, height: 152 }, (c) => {
+        c.addListener("playback_update", (e) => {
+          if (!e || !e.data) return;
+          music.playing = !e.data.isPaused;
+          updateMusicUi();
+        });
+        c.addListener("ready", () => { const f = music.onReady; music.onReady = null; if (f) f(); });
+        music.spotify = c;
+        resolve(c);
+      });
+    });
+  }
+
+  function musicStatus(text) { el.qMusicStatus.textContent = text; }
+
+  function updateMusicUi() {
+    el.btnMusicPlay.textContent = music.playing ? "⏸ Pause" : "▶ Play";
+    el.qMusic.classList.toggle("playing", music.playing);
+    if (music.playing) musicStatus("");
+  }
+
+  function prepareMusic(q) {
+    stopMusic();
+    music.q = q; music.started = false; music.playing = false;
+    music.kind = q.spotify ? "spotify" : q.audio ? "audio" : "";
+    el.qMusic.classList.toggle("hidden", !music.kind);
+    musicStatus("");
+    updateMusicUi();
+    if (music.kind === "spotify") {
+      if (!spotifyUri(q.spotify)) musicStatus("⚠ Not a valid Spotify track link in questions.yaml.");
+      else loadSpotifyApi().catch((e) => musicStatus("⚠ " + e.message));
+    } else if (music.kind === "audio") {
+      el.musicAudio.src = q.audio;
+      el.musicAudio.load();
+    }
+  }
+
+  async function playMusicFromStart() {
+    const q = music.q;
+    music.started = true;
+    if (music.kind === "audio") {
+      try {
+        el.musicAudio.currentTime = q.start;
+        await el.musicAudio.play();
+      } catch (e) { musicStatus("⚠ Could not play the audio file — check the path in questions.yaml."); }
+      return;
+    }
+    const uri = spotifyUri(q.spotify);
+    if (!uri) return;
+    musicStatus("Loading…");
+    try {
+      const c = await spotifyController(uri);
+      if (music.q !== q) return;
+      music.onReady = () => { if (music.q === q) c.play(); };
+      c.loadUri(uri, false, q.start);
+    } catch (e) { musicStatus("⚠ " + e.message); }
+  }
+
+  function toggleMusic() {
+    if (!music.kind) return;
+    if (!music.started) { playMusicFromStart(); return; }
+    if (music.kind === "audio") {
+      if (el.musicAudio.paused) el.musicAudio.play().catch(() => {}); else el.musicAudio.pause();
+    } else if (music.spotify) {
+      if (music.playing) music.spotify.pause(); else music.spotify.resume();
+    }
+  }
+
+  function restartMusic() { if (music.kind) playMusicFromStart(); }
+
+  function stopMusic() {
+    music.onReady = null;
+    if (!el.musicAudio.paused) el.musicAudio.pause();
+    if (music.spotify && music.playing) music.spotify.pause();
+    music.playing = false; music.started = false;
+    updateMusicUi();
+  }
+
+  let openQ = null; // { c, r }
+
+  function openQuestion(c, r) {
+    if (modalOpen()) return;
+    const cat = state.qdata.categories[c];
+    const q = cat.questions[r];
+    if (state.qboard[qKey(c, r)] !== undefined &&
+        !confirm("This question was already played. Open it again?\n(Use \"Undo\" on the wheel page to revert money.)")) return;
+    openQ = { c, r };
+    el.qMeta.textContent = `${cat.name} · ${money(q.value)}`;
+    el.qText.textContent = q.question;
+    if (q.image) {
+      el.qImage.onerror = () => { el.qImage.classList.add("hidden"); el.qImageError.textContent = `⚠ Image not found: ${q.image}`; el.qImageError.classList.remove("hidden"); };
+      el.qImage.src = q.image;
+      el.qImage.classList.remove("hidden");
+    } else {
+      el.qImage.removeAttribute("src");
+      el.qImage.classList.add("hidden");
+    }
+    el.qImageError.classList.add("hidden");
+    prepareMusic(q);
+    el.qAnswer.textContent = q.answer ? "✅ " + q.answer : "(no answer in the file)";
+    el.qAnswer.classList.add("hidden");
+    el.btnShowAnswer.classList.remove("hidden");
+    el.qTeams.innerHTML = "";
+    state.teams.forEach((t, i) => {
+      const b = document.createElement("button");
+      b.className = "btn q-team-btn";
+      b.style.setProperty("--team-color", TEAM_COLORS[i % TEAM_COLORS.length]);
+      b.textContent = `✔ ${t.name}`;
+      b.title = `${t.name} answered correctly: +${money(q.value)} (key ${i + 1})`;
+      b.addEventListener("click", () => answerQuestion(i));
+      el.qTeams.append(b);
+    });
+    el.questionModal.classList.remove("hidden");
+    tone(660, 0.15, "triangle");
+  }
+
+  function showAnswer() {
+    el.qAnswer.classList.remove("hidden");
+    el.btnShowAnswer.classList.add("hidden");
+  }
+
+  function closeQuestion() {
+    stopMusic();
+    el.imageZoom.classList.add("hidden");
+    el.questionModal.classList.add("hidden");
+    openQ = null;
+  }
+
+  // teamIdx = -1 means nobody answered correctly.
+  function answerQuestion(teamIdx) {
+    if (!openQ) return;
+    const { c, r } = openQ;
+    const key = qKey(c, r);
+    const value = state.qdata.categories[c].questions[r].value;
+    closeQuestion();
+    state.qboard[key] = teamIdx;
+    if (teamIdx >= 0) {
+      award(teamIdx, value, key);
+      el.qbMessage.textContent = `Correct! +${money(value)} for ${state.teams[teamIdx].name} 💶 — go to the wheel 🎡 to spin, or pick another question.`;
+      el.qbMessage.className = "qb-message good";
+    } else {
+      save();
+      sndBad();
+      el.qbMessage.textContent = "Nobody got it right… pick another question!";
+      el.qbMessage.className = "qb-message bad";
+    }
+    renderQuestionBoard();
   }
 
   function renderAll() {
@@ -317,11 +695,11 @@
     });
   }
 
-  function award(teamIdx, amount) {
+  function award(teamIdx, amount, questionKey) {
     if (spinning || modalOpen()) return;
     const team = state.teams[teamIdx];
     team.money += amount;
-    state.log.push({ team: teamIdx, amount });
+    state.log.push(questionKey ? { team: teamIdx, amount, q: questionKey } : { team: teamIdx, amount });
     state.active = teamIdx;
     save();
     sndCash();
@@ -337,6 +715,8 @@
     // Money may already have been spent; balance never goes below zero.
     team.money = Math.max(0, team.money - entry.amount);
     state.log.splice(logIdx, 1);
+    // Reverting a question award puts the question back on the board.
+    if (entry.q && state.qboard[entry.q] === entry.team) delete state.qboard[entry.q];
     save();
     setMessage(`Reverted ${money(entry.amount)} for ${team.name}.`);
     renderTeams(); renderHistory(); updateControls();
@@ -355,7 +735,7 @@
       const idx = state.log.length - 1 - k;
       const li = document.createElement("li");
       const txt = document.createElement("span");
-      txt.textContent = `+${money(entry.amount)} → ${state.teams[entry.team].name}`;
+      txt.textContent = `+${money(entry.amount)} → ${state.teams[entry.team].name}` + (entry.q ? " ❓" : "");
       const b = document.createElement("button");
       b.className = "score-btn";
       b.textContent = "✕";
@@ -594,8 +974,9 @@
   // ---------- Resets ----------
   function resetBoard() {
     if (spinning) return;
-    if (!confirm("Reset the board? Letters are hidden again, the wheel is refilled and all money is set to € 0 (teams are kept).")) return;
-    Object.assign(state, { used: [], letterTeams: {}, solved: false, winner: null, active: 0, log: [] });
+    if (!confirm("Reset the board? Letters are hidden again, the wheel is refilled, all questions are available again and all money is set to € 0 (teams are kept).")) return;
+    Object.assign(state, { used: [], letterTeams: {}, solved: false, winner: null, active: 0, log: [],
+      qboard: {}, qdata: QDATA || state.qdata });
     state.teams.forEach((t) => (t.money = 0));
     save();
     showGame();
@@ -608,6 +989,7 @@
     state = null;
     el.vowelModal.classList.add("hidden");
     el.guessModal.classList.add("hidden");
+    closeQuestion();
     showStart();
   }
 
@@ -627,7 +1009,13 @@
 
   // ---------- Wiring ----------
   el.btnStart.addEventListener("click", startNewGame);
-  el.btnContinue.addEventListener("click", () => { state = load(); if (state) { setSentence(state.sentence); showGame(); } });
+  el.btnContinue.addEventListener("click", () => {
+    state = load();
+    if (!state) return;
+    if (!state.qdata) state.qdata = QDATA;
+    setSentence(state.sentence);
+    showGame();
+  });
   el.btnSpin.addEventListener("click", spin);
   el.btnNextTeam.addEventListener("click", nextTeam);
   el.btnVowel.addEventListener("click", openVowelModal);
@@ -639,9 +1027,35 @@
   el.btnSolve.addEventListener("click", revealSolution);
   el.btnResetBoard.addEventListener("click", resetBoard);
   el.btnNewGame.addEventListener("click", newGame);
+  el.btnToQuestions.addEventListener("click", goToQuestions);
+  el.btnToWheel.addEventListener("click", goToWheel);
+  el.btnShowAnswer.addEventListener("click", showAnswer);
+  el.btnQClose.addEventListener("click", closeQuestion);
+  el.qImage.addEventListener("click", () => { el.imageZoomImg.src = el.qImage.src; el.imageZoom.classList.remove("hidden"); });
+  el.imageZoom.addEventListener("click", () => el.imageZoom.classList.add("hidden"));
+  el.btnMusicPlay.addEventListener("click", toggleMusic);
+  el.btnMusicRestart.addEventListener("click", restartMusic);
+  el.musicAudio.addEventListener("play", () => { music.playing = true; updateMusicUi(); });
+  el.musicAudio.addEventListener("pause", () => { music.playing = false; updateMusicUi(); });
+  el.musicAudio.addEventListener("error", () => { if (music.kind === "audio") musicStatus("⚠ Could not play the audio file — check the path in questions.yaml."); });
+  el.btnQNobody.addEventListener("click", () => answerQuestion(-1));
   window.addEventListener("resize", () => { if (state) sizeBoard(); });
   document.addEventListener("keydown", (e) => {
-    if (!state || !el.gameScreen.classList.contains("active")) return;
+    if (!state) return;
+    if (el.questionsScreen.classList.contains("active")) {
+      if (!el.questionModal.classList.contains("hidden")) {
+        if (!el.imageZoom.classList.contains("hidden")) { if (e.key === "Escape") el.imageZoom.classList.add("hidden"); return; }
+        if (e.key === "Escape") closeQuestion();
+        else if ((e.key === "p" || e.key === "P") && music.kind) { e.preventDefault(); toggleMusic(); }
+        else if (e.key === "a" || e.key === "A" || e.code === "Space") { e.preventDefault(); showAnswer(); }
+        else if (/^[1-9]$/.test(e.key) && Number(e.key) <= state.teams.length) answerQuestion(Number(e.key) - 1);
+        else if (e.key === "0") answerQuestion(-1);
+        return;
+      }
+      if (e.key === "w" || e.key === "W") goToWheel();
+      return;
+    }
+    if (!el.gameScreen.classList.contains("active")) return;
     if (!el.guessModal.classList.contains("hidden")) {
       if (e.key === "Enter") submitGuess();
       if (e.key === "Escape") closeGuessModal();
@@ -656,6 +1070,7 @@
     if (e.target.tagName === "INPUT") return;
     if (e.code === "Space") { e.preventDefault(); spin(); }
     if (e.key === "n" || e.key === "N") nextTeam();
+    if (e.key === "q" || e.key === "Q") goToQuestions();
   });
 
   makeSnow();
